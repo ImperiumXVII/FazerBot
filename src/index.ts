@@ -3,6 +3,7 @@ import { discordCommands } from './deploy-commands';
 import { env } from './environment';
 import { TwitchIntegration, TokenData } from './twitch-eventsub';
 import { promises as fs } from 'fs';
+import { userJoinHandler } from './user-join';
 
 export const client = new Client({ 
 	intents: [
@@ -30,6 +31,7 @@ client.on('ready', async (bot) => {
 	twitchChannel = (await client.channels.fetch('941001791649239041'))! as TextChannel;
 	debugChannel.send(`It is now ${new Date().toLocaleString('en-gb')} and the bot is online! Woohoo!`);
 	console.log(`Bot logged in as ${client.user?.username} at ${new Date().toLocaleString('en-gb')}`);
+	userJoinHandler.init();
 	discordCommands.init();
 
 	await (async () => {
