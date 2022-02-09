@@ -1,11 +1,8 @@
 import { Client, Guild, Intents, TextChannel } from 'discord.js';
+import { discordCommands } from './deploy-commands';
 import { env } from './environment';
-import { REST } from '@discordjs/rest';
-import { Routes } from 'discord-api-types/v9';
-import fs from 'fs';
-
-const commands: any[] = [];
-const commandFiles = fs.readdirSync('./build/commands').filter(file => file.endsWith('.js'));
+import { TwitchIntegration, TokenData } from './twitch-eventsub';
+import { promises as fs } from 'fs';
 
 export const client = new Client({ 
 	intents: [
@@ -18,28 +15,27 @@ export const client = new Client({
 	]
 });
 
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	commands.push(command.data.toJSON());
-}
-
-const rest = new REST({ version: '9' }).setToken(env.DISCORD_TOKEN);
-
 client.login(env.DISCORD_TOKEN);
 
 export var guild: Guild;
 export var welcomeChannel: TextChannel;
 export var debugChannel: TextChannel;
+export var twitchChannel: TextChannel;
+export var twitchIntegration: TwitchIntegration;
 
 client.on('ready', async (bot) => {
 	guild = client.guilds.cache.at(0)!;
 	welcomeChannel = (await client.channels.fetch('940660352713109606'))! as TextChannel;
 	debugChannel = (await client.channels.fetch('940751736925200424'))! as TextChannel;
+	twitchChannel = (await client.channels.fetch('941001791649239041'))! as TextChannel;
 	debugChannel.send(`It is now ${new Date().toLocaleString('en-gb')} and the bot is online! Woohoo!`);
 	console.log(`Bot logged in as ${client.user?.username} at ${new Date().toLocaleString('en-gb')}`);
+	discordCommands.init();
 
-	await rest.put(
-		Routes.applicationGuildCommands(client.user!.id, guild.id),
-		{ body: commands },
-	);
+	await (async () => {
+		const tokenData: TokenData = JSON.parse(await fs.readFile('./twitch-tokens.json', { encoding: 'utf-8' }));
+		twitchIntegration = new TwitchIntegration(tokenData);
+	})();
+
+	twitchIntegration.init();
 });

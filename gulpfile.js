@@ -1,5 +1,5 @@
 const fs = require('fs');
-const {src, dest, series, watch} = require('gulp');
+const {dest, series, watch} = require('gulp');
 const ts = require('gulp-typescript');
 const del = require('del');
 

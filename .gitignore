@@ -1,3 +1,5 @@
 src/environment.ts
 build 
 node_modules 
+src/twitch-tokens.json
+twitch-tokens.json
